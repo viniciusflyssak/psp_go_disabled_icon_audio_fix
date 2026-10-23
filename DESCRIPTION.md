@@ -1,3 +1,3 @@
-﻿Experimental PRO-C plugin for PSP Go headphone-detection faults, aiming to restore speaker audio and volume buttons.
+Restore PSP Go speaker audio and volume buttons when a faulty headphone jack keeps the console muted. For PRO-C.
 
-Plugin PRO-C experimental para falhas na detecção de fone do PSP Go, visando recuperar o áudio e os botões de volume.
+Recupere o áudio e os botões de volume do PSP Go quando um defeito no conector de fone deixa o console mudo. Para PRO-C.

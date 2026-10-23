@@ -1,174 +1,73 @@
-# psp_go_disabled_icon_audio_fix
+# PSP Go Audio Fix
 
-Experimental PSP Go kernel plugin for PRO-C that attempts to restore speaker audio and volume-button control when a faulty headphone-detection line leaves the system muted or showing the disabled-volume icon.
-
-Plugin kernel experimental para PSP Go com PRO-C que tenta recuperar o áudio dos alto-falantes e o controle pelos botões de volume quando uma falha na detecção de fone deixa o sistema mudo ou exibindo o ícone de volume desabilitado.
-
-Repository: https://github.com/viniciusflyssak/psp_go_disabled_icon_audio_fix
-
-Compiled build / Binário compilado: [go_audiofix.prx 1.2](dist/go_audiofix.prx) — [notes / notas](dist/README.md).
+[English](#english) · [Português](#português)
 
 ## English
 
-### Status and behavior
+A fix for PSP Go consoles that stay muted or show the disabled-volume icon because of a faulty headphone jack.
 
-Version **1.2 was tested successfully on a PSP Go running firmware 6.61**, as reported by the console owner: speaker audio and VOL+/VOL- work in XMB and games; the smaller notification displays correctly; the native volume icon no longer remains visible at startup. It also builds with PSPDEV using `-Wall -Wextra -Werror`. This confirms operation on the tested device, not every firmware, game or hardware revision.
+The plugin restores audio through the built-in speakers and lets you use **VOL+ and VOL−** normally, both in the **XMB menu and in games**. It runs automatically, with no button combinations needed.
 
-- PSP Go only (05g, model value 4), in VSH and GAME.
-- Requests speaker routing, clears system mute, and sets master volume.
-- Uses **VOL+ / VOL- only**, without triggers or D-pad combinations.
-- Starts at **12/30**, clamps to 0..30, and repeats after 400 ms then every 120 ms when held. Both volume buttons together or HOLD make no adjustment through the listener.
-- Uses nonblocking controller Peek every 20 ms; checks audio state every 250 ms and after adjustments. Mute, volume and routing are written only when readback differs from the desired state. The short notification temporarily uses VBlank for pacing.
-- Uses the system master-volume parameter, not per-channel gain, a PCM multiplier or amplification above the original maximum.
-- No user RAM expansion, reserved audio channels, PCM buffers or flash0 writes. `ef0:` is internal storage, not a RAM partition.
+**Tested on:** PSP Go with PRO-C, firmware **6.61**, version **1.2**. Other setups have not been confirmed.
 
-This is a software workaround, not a physical repair. It does not change the disabled-volume icon itself. Firmware can override audio settings between updates, causing cuts. If firmware also handles the volume buttons, duplicate steps are possible. The listener requires `sceCtrl` to expose the physical button states. POPS, Bluetooth and video-out are not validated.
+### Installation
 
-### On-screen notification (1.2)
-
-A single small line appears at the **bottom-right for about 2.5 seconds**:
-
-```text
-AUDIOFIX 1.2 ACTIVE
-```
-
-The font is 6x9 pixels per character, replacing the large three-line display from 1.1. Drawing is paced by VBlank while visible to reduce flicker. `ACTIVE` means the initial API checks succeeded; it does not independently confirm audible speaker output. Errors show a short message and hexadecimal API code. Detailed diagnostics stay in the log; `LOG ERROR` indicates a log failure.
-
-The notification draws into a validated existing 480x272 LCD VRAM framebuffer without switching modes, clearing the screen or hooking the renderer. Rendering can still overwrite it, and a static homebrew screen can retain pixels until its next redraw. Set `AUDIOFIX_OSD_ENABLED` to **0** in `config.h` and rebuild to disable it completely. A plugin rejected before `module_start` cannot display its own message.
-
-### Build and install
-
-Start Docker Desktop in Linux-container mode. In PowerShell, from the project folder:
-
-```powershell
-cd psp_go_disabled_icon_audio_fix
-docker run --rm --mount "type=bind,source=$($PWD.Path),target=/src" -w /src ghcr.io/pspdev/pspdev:latest sh -c "make clean && make"
-```
-
-With PSPDEV installed in Linux/WSL, run `make` in the project directory. The output to install is **`go_audiofix.prx`**. ELF and object files stay on the PC. Pin the container digest for reproducible builds.
-
-1. Replace `ef0:/seplugins/go_audiofix.prx` with the new build. Its module version and notification identify version 1.2.
-2. Disable `boost.prx` and `volcon.prx` during testing.
-3. Append the following line to the **existing** `ef0:/seplugins/vsh.txt` and `ef0:/seplugins/game.txt`, preserving their other entries:
+1. [Download go_audiofix.prx — v1.2](https://github.com/viniciusflyssak/psp_go_disabled_icon_audio_fix/raw/refs/heads/main/dist/go_audiofix.prx).
+2. Copy it to `ef0:/seplugins/` on your PSP Go.
+3. Add this line to **both** `vsh.txt` and `game.txt` inside that folder. Create the files if needed and keep any existing entries:
 
    ```text
    ef0:/seplugins/go_audiofix.prx 1
    ```
 
-4. Verify that the plugin is enabled in Recovery and PRO-C is active. Restart VSH; test speakers and VOL+/VOL- in XMB, a homebrew and a freshly launched game. Do not continue an existing or saved game session when checking a plugin update.
-5. To undo, disable its entries and restart VSH. Preserve USB/Recovery access to edit the entries if this experimental build freezes.
+4. Disable **Audio Boost** (`boost.prx`) and **Volume Control** (`volcon.prx`) if you use them, to avoid conflicts.
+5. Restart VSH. To test in a game, launch it again rather than continuing an existing session.
 
-Example lists are in `seplugins/`. Keep sources and build files on the PC. The repository name can differ from the runtime filename, which remains `go_audiofix.prx`.
+### Using it
 
-### Logs and troubleshooting
+A small **AUDIOFIX 1.2 ACTIVE** message appears briefly when the plugin starts. Adjust the volume with **VOL+ / VOL−**; hold either button to keep adjusting. Volume starts at **12 out of 30** each time the plugin loads.
 
-Logging starts in `module_start`, before model checks and worker creation. It records model, firmware, thread errors, routing and audio results. These paths are tried in order; the first writable path is reused:
+To disable the plugin, change the final `1` in its entries to `0` and restart VSH.
 
-```text
-ef0:/seplugins/go_audiofix.log
-ef0:/go_audiofix.log
-ms0:/seplugins/go_audiofix.log
-ms0:/go_audiofix.log
-```
+This is a software workaround; the physical headphone-jack fault remains.
 
-The worker retries failed logging at most once per second. A one-time summary after 10 seconds records mute/volume/route write attempts and current state. Context 0x100 identifies VSH; 0x200 identifies GAME. In an idle session with stable state, mute/volume counters should not keep increasing; route writes should normally total one startup request. Button presses and firmware corrections can increase them. Logs are appended across launches and can be removed manually.
+### Help and development
 
-If **neither overlay nor log appears**, verify the copied PRX, exact filename, `ef0:` path, enabled VSH entry and active CFW. Send the exact CFW version, plugin-list entries and any available log. Missing overlay alone is not proof of a load failure because drawing is best-effort.
+If it does not work, [open an issue](https://github.com/viniciusflyssak/psp_go_disabled_icon_audio_fix/issues) with your firmware version, where the problem occurs, and `ef0:/seplugins/go_audiofix.log` if available.
 
-Starting with version 1.1, the plugin uses the original PRO import descriptor `0x00090000`. Version 1.0 incorrectly used `0x00010011`, requesting minimum library version 0.17, which could prevent loading. The PRO resolver translates the old impose NIDs. Routing additionally tries setter `0x18B6F449` and getter `0x931ABEF5` if their historical NIDs are unavailable. If no route getter is found, the plugin logs this and keeps startup-only routing rather than blindly rewriting it.
-
-Routing **mode 2** (force speakers) is based on reports for recent firmware and worked in the reported XMB and fresh game test; other devices and resume behavior still need validation. Historical SDK documentation lists only 0/1. If routing is rejected or accepted without sound, change `AUDIOFIX_ROUTE_MODE` to **1** (speakers + headphones), rebuild and retest. A different electrical fault may require a hardware repair.
-
-### Files and hardware checks
-
-`main.c`: audio, buttons, logging and lifecycle. `osd.c` / `osd.h`: overlay. `config.h`: timing and limits. `pro_imports.S`: PRO resolver import. `exports.exp`: PRX lifecycle exports. `Makefile`: build.
-
-Check the new notification/log, whether the native volume icon stops constantly reappearing, actual speaker audio, volume bounds and hold-repeat; test XMB, homebrew, a game, suspend/resume and return to XMB. Check for freezes, cuts and duplicate volume steps. Volume returns to 12 when a new plugin instance loads. An accepted API result does not validate the speaker output.
+[Build and troubleshooting guide](docs/TECHNICAL.md#english) · [Changelog](CHANGELOG.md#english)
 
 ## Português
 
-### Estado e funcionamento
+Uma solução para PSP Go que fica sem som ou mostra o ícone de volume desabilitado por causa de um defeito no conector de fone.
 
-A versão **1.2 foi testada com sucesso em um PSP Go com firmware 6.61**, conforme relato do proprietário: áudio nos alto-falantes e VOL+/VOL- funcionam no XMB e em jogos; o aviso menor aparece corretamente; o ícone nativo de volume não fica mais visível no início. A versão também compila no PSPDEV com `-Wall -Wextra -Werror`. O resultado confirma o funcionamento no aparelho testado, sem representar todos os firmwares, jogos ou revisões de hardware.
+O plugin recupera o áudio dos alto-falantes e permite usar **VOL+ e VOL−** normalmente, tanto no **menu XMB quanto em jogos**. Funciona automaticamente, sem combinações de botões.
 
-- Somente PSP Go (05g, modelo 4), nos contextos VSH e GAME.
-- Solicita a rota dos alto-falantes, limpa mute e ajusta o volume mestre.
-- Controle somente por **VOL+ / VOL-**, sem gatilho ou direcional.
-- Volume inicial **12/30**, limitado a 0..30. Ao segurar, repete após 400 ms e depois a cada 120 ms. Os dois botões juntos ou HOLD não ajustam pelo listener.
-- Consulta os botões com Peek a cada 20 ms; verifica o estado do áudio a cada 250 ms e após ajustes. Só escreve mute, volume e rota quando a leitura difere do estado desejado. Durante o aviso curto, usa VBlank para controlar o ritmo.
-- Usa o volume mestre do sistema, sem ganho por canal, multiplicação PCM ou boost acima do limite original.
-- Sem expansão de RAM do usuário, canais reservados, buffers PCM ou escrita em flash0. `ef0:` é armazenamento interno, não uma partição RAM.
+**Testado em:** PSP Go com PRO-C, firmware **6.61**, versão **1.2**. Outras configurações ainda não foram confirmadas.
 
-É uma tentativa de contorno por software, não um reparo físico. O plugin não altera diretamente o ícone desabilitado. O firmware pode reverter as configurações entre ciclos, causando cortes. Se o firmware também processar VOL+/VOL-, podem ocorrer passos duplicados. O listener depende de o `sceCtrl` entregar os estados dos botões. POPS, Bluetooth e video-out não foram validados.
+### Instalação
 
-### Aviso na tela (1.2)
-
-Uma única linha pequena aparece no **canto inferior direito por cerca de 2,5 segundos**:
-
-```text
-AUDIOFIX 1.2 ACTIVE
-```
-
-A fonte tem 6x9 pixels por caractere, substituindo as três linhas grandes da 1.1. O desenho acompanha o VBlank enquanto está visível para reduzir a cintilação. `ACTIVE` confirma o sucesso das verificações iniciais das APIs; não comprova por si só que há som. Erros mostram mensagem curta e código hexadecimal. Os detalhes ficam no log; `LOG ERROR` indica falha de gravação.
-
-O texto é desenhado em um framebuffer LCD 480x272 em VRAM validado, sem trocar o modo de tela, limpar a imagem ou interceptar o renderer. O jogo/XMB ainda pode sobrescrevê-lo, e telas estáticas podem reter os pixels até a próxima redesenhada. Para desligar o aviso por completo, defina `AUDIOFIX_OSD_ENABLED` como **0** em `config.h` e recompile. Se o loader rejeitar o PRX antes de `module_start`, ele não pode mostrar sua própria mensagem.
-
-### Compilar e instalar
-
-Abra o Docker Desktop em modo Linux containers e execute no PowerShell:
-
-```powershell
-cd psp_go_disabled_icon_audio_fix
-docker run --rm --mount "type=bind,source=$($PWD.Path),target=/src" -w /src ghcr.io/pspdev/pspdev:latest sh -c "make clean && make"
-```
-
-Se o PSPDEV estiver instalado no Linux/WSL, rode `make` na pasta do projeto. O arquivo para instalar é **`go_audiofix.prx`**; ELF e objetos ficam no computador. Para reproduzir exatamente o build, fixe o digest da imagem Docker.
-
-1. Copie o novo PRX para `ef0:/seplugins/go_audiofix.prx`, substituindo o anterior. Os metadados e o aviso identificam a versão 1.2.
-2. Desative `boost.prx` e `volcon.prx` durante os testes.
-3. Acrescente a linha abaixo aos arquivos **existentes** `ef0:/seplugins/vsh.txt` e `ef0:/seplugins/game.txt`, preservando as outras entradas:
+1. [Baixe go_audiofix.prx — v1.2](https://github.com/viniciusflyssak/psp_go_disabled_icon_audio_fix/raw/refs/heads/main/dist/go_audiofix.prx).
+2. Copie para `ef0:/seplugins/` no seu PSP Go.
+3. Adicione esta linha aos arquivos **vsh.txt e game.txt** dentro dessa pasta. Crie os arquivos caso não existam e preserve as outras entradas:
 
    ```text
    ef0:/seplugins/go_audiofix.prx 1
    ```
 
-4. Confirme no Recovery que o plugin está habilitado e que o PRO-C está ativo. Reinicie o VSH e teste alto-falantes e VOL+/VOL- no XMB, homebrew e jogo iniciado novamente. Não continue uma sessão existente ou salva ao verificar uma atualização do plugin.
-5. Para desfazer, desative as entradas e reinicie o VSH. Preserve acesso USB/Recovery para editar os arquivos caso esta versão experimental trave.
+4. Desative o **Audio Boost** (`boost.prx`) e o **Volume Control** (`volcon.prx`), caso os utilize, para evitar conflitos.
+5. Reinicie o VSH. Para testar em um jogo, abra-o novamente em vez de continuar uma sessão existente.
 
-Os exemplos de listas ficam em `seplugins/`. Não copie fontes e arquivos de build para o console. O nome do repositório pode ser diferente do nome do PRX, que continua sendo `go_audiofix.prx`.
+### Como usar
 
-### Log e diagnóstico
+Um pequeno aviso **AUDIOFIX 1.2 ACTIVE** aparece por alguns instantes quando o plugin inicia. Ajuste o volume com **VOL+ / VOL−**; mantenha o botão pressionado para continuar ajustando. O volume começa em **12 de 30** a cada carregamento do plugin.
 
-O log começa em `module_start`, antes de verificar o modelo ou criar a thread. Registra modelo, firmware, erros de thread, rota e APIs de áudio. Procure nesta ordem:
+Para desativar, troque o `1` final das entradas por `0` e reinicie o VSH.
 
-```text
-ef0:/seplugins/go_audiofix.log
-ef0:/go_audiofix.log
-ms0:/seplugins/go_audiofix.log
-ms0:/go_audiofix.log
-```
+A solução é por software; o defeito físico no conector de fone permanece.
 
-O primeiro caminho gravável é reutilizado. Se falhar, a thread tenta novamente no máximo uma vez por segundo. Após 10 segundos, grava um único resumo com tentativas de escrita de mute, volume e rota e os valores lidos. O contexto 0x100 indica VSH; 0x200 indica GAME. Sem apertar botões e com estado estável, os contadores de mute/volume não devem continuar aumentando; a rota normalmente soma uma chamada inicial. Ajustes de botão e correções de estado podem aumentar esses valores. O arquivo acumula linhas entre carregamentos e pode ser apagado manualmente.
+### Ajuda e desenvolvimento
 
-Se **não aparecer mensagem nem log**, confira o PRX copiado, nome exato, caminho `ef0:`, entrada VSH habilitada e CFW ativo. Informe a versão exata do CFW, as entradas das listas e qualquer log disponível. A ausência apenas da mensagem não comprova falha de carregamento, porque o desenho depende do framebuffer.
+Se não funcionar, [abra uma issue](https://github.com/viniciusflyssak/psp_go_disabled_icon_audio_fix/issues) informando a versão do firmware, onde o problema acontece e o conteúdo de `ef0:/seplugins/go_audiofix.log`, se disponível.
 
-O descritor do import foi corrigido de `0x00010011` para `0x00090000`, igual ao fonte original do PRO. O anterior exigia versão mínima 0.17 da biblioteca, podendo impedir o carregamento. O resolvedor PRO traduz os NIDs antigos do impose. Para a rota, também são tentados o setter `0x18B6F449` e o getter `0x931ABEF5` quando os NIDs históricos não existem. Sem getter de rota, registra essa condição e mantém o roteamento apenas na inicialização, sem regravações cegas.
-
-O **modo 2**, que solicita forçar alto-falantes, baseia-se em relatos de firmware recente e funcionou no teste informado de XMB e jogo recém-iniciado; outros aparelhos e suspensão/retorno ainda precisam ser validados. A documentação histórica enumera somente 0/1. Se a rota for recusada ou continuar sem som, experimente `AUDIOFIX_ROUTE_MODE = 1` (alto-falantes + fone) em `config.h`, recompile e teste novamente. Outro defeito elétrico pode exigir reparo físico.
-
-### Arquivos e testes no console
-
-`main.c`: áudio, botões, log e ciclo de vida. `osd.c` / `osd.h`: mensagem visual. `config.h`: limites e tempos. `pro_imports.S`: import do resolvedor PRO. `exports.exp`: exports do PRX. `Makefile`: compilação.
-
-Confira o novo aviso/log, se o ícone nativo deixa de aparecer continuamente, som real nos alto-falantes, limites e repetição de volume; teste XMB, homebrew, jogo, suspensão/retorno e volta ao XMB. Observe travas, cortes e passos duplicados. O volume volta a 12 a cada nova instância. Retorno de sucesso das APIs não comprova a saída sonora real.
-
-## Technical references / Referências técnicas
-
-- [PSPSDK impose parameters](https://github.com/pspdev/pspsdk/blob/master/src/kernel/pspimpose_driver.h)
-- [PSPSDK display framebuffer API](https://github.com/pspdev/pspsdk/blob/master/src/display/pspdisplay.h)
-- [PSPSDK import descriptor structure](https://github.com/pspdev/pspsdk/blob/master/src/kernel/psploadcore.h)
-- [Original PRO imports](https://github.com/MrColdbird/procfw/blob/master/SystemControl/libs/libpspsystemctrl_kernel/SystemCtrlForKernel.S)
-- [PRO resolver implementation](https://github.com/MrColdbird/procfw/blob/master/SystemControl/systemctrl.c)
-- [PSPSDK routing discussion, issue 388](https://github.com/pspdev/pspsdk/issues/388)
-- [PSPDEV installation on Windows](https://pspdev.github.io/installation/windows.html)
-- [PSPDEV container](https://github.com/pspdev/pspdev/pkgs/container/pspdev)
+[Guia de compilação e diagnóstico](docs/TECHNICAL.md#português) · [Histórico de versões](CHANGELOG.md#português)
