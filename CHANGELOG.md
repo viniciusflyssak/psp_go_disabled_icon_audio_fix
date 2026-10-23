@@ -2,7 +2,10 @@
 
 ## English
 
-### 1.3 — test build, pending console validation
+### 1.3 — user-confirmed on PSP Go, PRO-C 6.61
+
+- The console owner confirmed the requested behavior, including Pause Game
+  audio recovery and the volume-level indicator. The tested binary is unchanged.
 
 - Show `VOLUME 00/30` through `VOLUME 30/30` after VOL+/VOL- adjustments;
   hide the notification about 1.5 seconds after the last adjustment.
@@ -14,8 +17,8 @@
   unregister the handler before unloading the module.
 - Add host tests for bounded/coalesced retries, timer wrap, restored clocks
   and volume labels. These do not substitute for a PSP hardware test.
-- Keep the hardware-validated 1.2 binary in `dist/`; publish the 1.3 candidate
-  separately in `dist/v1.3/`.
+- Make 1.3 the main download; keep versioned copies in `dist/v1.3/` and
+  preserve 1.2 in `dist/v1.2/`.
 
 ### 1.2 — user-confirmed on PSP Go, firmware 6.61
 
@@ -39,7 +42,10 @@
 
 ## Português
 
-### 1.3 — versão de teste, aguardando validação no console
+### 1.3 — confirmada pelo usuário em PSP Go, PRO-C 6.61
+
+- O proprietário confirmou o comportamento desejado, incluindo recuperação de
+  áudio após Pause Game e indicador de volume. O binário testado não mudou.
 
 - Exibe de `VOLUME 00/30` a `VOLUME 30/30` após ajustar VOL+/VOL-;
   oculta o aviso cerca de 1,5 segundo depois do último ajuste.
@@ -51,8 +57,8 @@
   antes de descarregar o módulo.
 - Adiciona testes de tentativas limitadas, eventos agrupados, virada do relógio,
   restauração de tempo e texto de volume. Não substituem o teste no PSP.
-- Preserva o binário 1.2 validado em `dist/` e publica a candidata 1.3
-  separadamente em `dist/v1.3/`.
+- Torna a 1.3 o download principal, mantém a cópia em `dist/v1.3/`
+  e preserva a 1.2 em `dist/v1.2/`.
 
 ### 1.2 — confirmada pelo usuário em PSP Go, firmware 6.61
 

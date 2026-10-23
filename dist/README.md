@@ -1,31 +1,31 @@
-# GoAudioFix 1.2
+# GoAudioFix 1.3
 
 ## English
 
-Download `go_audiofix.prx` from this folder and copy it to `ef0:/seplugins/`.
-See the main README for installation and rollback instructions.
+Download `go_audiofix.prx` and copy it to `ef0:/seplugins/`. Follow the main
+README for installation. The console owner confirmed version 1.3 on PSP Go
+with PRO-C, firmware 6.61: XMB/game audio, volume buttons and level indicator,
+and sound recovery after Pause Game. Other setups have not been confirmed.
 
-Version 1.2 compiled successfully with PSPDEV and was confirmed working by the
-owner of a PSP Go running firmware 6.61: speaker audio and volume buttons in
-XMB and games, correct small notification, and no persistent startup volume
-icon. This is validation on one device, not a universal compatibility claim.
-The binary is unchanged from the version 1.2 test build.
+This is the same binary that was tested. After updating, launch the game
+normally and create a new Pause Game session to use the resume fix.
+Version 1.2 remains available under `dist/v1.2/` for rollback.
 
 SHA-256:
 
 ```text
-1333fec7255cd9448b7693aa6a113ffcdedb4b744146da2bf2dbece195e8b5d8
+f23f8cbfdde671fcc1029fce9e835fc53d7318e389458a46eb13aad7b331bdf9
 ```
 
 ## Português
 
-Baixe `go_audiofix.prx` desta pasta e copie para `ef0:/seplugins/`.
-Consulte o README principal para instalar ou desfazer a instalação.
+Baixe `go_audiofix.prx` e copie para `ef0:/seplugins/`. Siga o README principal
+para instalar. O proprietário confirmou a versão 1.3 em PSP Go com PRO-C,
+firmware 6.61: áudio no XMB e em jogos, botões e indicador de volume e recuperação
+do som após Pause Game. Outras configurações ainda não foram confirmadas.
 
-A versão 1.2 compilou no PSPDEV e foi confirmada pelo proprietário de um PSP Go
-com firmware 6.61: áudio e botões de volume no XMB e em jogos, aviso pequeno
-correto e ausência do ícone de volume persistente no início. É validação em
-um aparelho, não uma garantia universal de compatibilidade.
-O binário é o mesmo da versão 1.2 de teste, sem alterações.
+É o mesmo binário que foi testado. Após atualizar, abra o jogo normalmente
+e crie uma nova pausa para usar a correção da retomada.
+A versão 1.2 continua em `dist/v1.2/` para retorno, se necessário.
 
-O SHA-256 acima identifica este binário.
+O SHA-256 acima identifica o binário.

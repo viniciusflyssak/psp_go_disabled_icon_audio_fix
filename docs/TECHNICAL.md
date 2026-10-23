@@ -6,7 +6,7 @@
 
 ### 1.3 resume recovery and volume indicator
 
-This is a candidate fix; the Pause Game path is not yet validated on the console.
+The console owner confirmed version 1.3, including Pause Game recovery and the volume indicator, on PSP Go with PRO-C firmware 6.61. Other setups remain unvalidated.
 The module registers a system-event handler that only sets a flag. Audio calls,
 logging and OSD work stay in the worker. A separate RTC check every 250 ms can
 spot a restored snapshot whose plugin/system-time state was saved earlier.
@@ -30,8 +30,8 @@ cc -std=c99 -Wall -Wextra -Werror -I. logic.c tests/logic_test.c -o /tmp/audiofi
 
 `AUDIOFIX_VOLUME_OSD_US` controls the volume indicator lifetime (1.5 seconds).
 It displays the target level after accepted audio calls, including at 0/30.
-The source and newly compiled root PRX are version 1.3. The tested 1.2 artifact
-remains at `dist/go_audiofix.prx`; the candidate is `dist/v1.3/go_audiofix.prx`.
+The source and newly compiled root PRX are version 1.3. The main download at `dist/go_audiofix.prx` and versioned copy at
+`dist/v1.3/go_audiofix.prx` are the tested 1.3 binary; 1.2 is archived in `dist/v1.2/`.
 Create a fresh Pause Game snapshot after updating; an older snapshot may restore
 an older plugin/state and cannot be assumed to include the new code.
 
@@ -114,7 +114,7 @@ Check the new notification/log, whether the native volume icon stops constantly 
 
 ### Recuperação de retomada e indicador de volume da 1.3
 
-É uma possível correção; o caminho Pause Game ainda precisa ser validado no PSP.
+O proprietário confirmou a versão 1.3, incluindo recuperação após Pause Game e indicador de volume, em PSP Go com PRO-C e firmware 6.61. Outras configurações ainda não foram validadas.
 O handler de eventos do sistema apenas sinaliza a thread. Áudio, log e tela são
 tratados fora do callback. Uma leitura RTC a cada 250 ms ajuda a detectar uma
 sessão restaurada com estado antigo do plugin/relógio do sistema. Intervalos
@@ -133,8 +133,8 @@ nativo, execute os comandos de teste da seção inglesa na raiz do projeto.
 `AUDIOFIX_VOLUME_OSD_US` controla a duração do indicador (1,5 segundo). Ele mostra
 o nível desejado após as APIs aceitarem o ajuste, inclusive em 0/30.
 
-Os fontes e o PRX recompilado na raiz são a versão 1.3. O binário 1.2 validado
-continua em `dist/go_audiofix.prx`; a candidata está em `dist/v1.3/go_audiofix.prx`.
+Os fontes e o PRX recompilado na raiz são a versão 1.3. O download principal em `dist/go_audiofix.prx` e a cópia em `dist/v1.3/go_audiofix.prx`
+são o binário 1.3 testado; a versão 1.2 está arquivada em `dist/v1.2/`.
 Crie uma nova pausa após atualizar; uma sessão antiga pode restaurar o código
 ou estado anterior, sem incluir a mudança.
 
