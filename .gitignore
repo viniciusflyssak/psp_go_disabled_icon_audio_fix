@@ -1,0 +1,6 @@
+*.o
+*.elf
+*.prx
+exports.c
+*.log
+!dist/go_audiofix.prx
