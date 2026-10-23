@@ -16,6 +16,15 @@
 #define AUDIOFIX_LOG_PATH "ef0:/seplugins/go_audiofix.log"
 #define AUDIOFIX_OSD_ENABLED 1
 #define AUDIOFIX_OSD_US 2500000u  /* breve aviso de 2,5 s */
+#define AUDIOFIX_VOLUME_OSD_US 1500000u
+
+/* Bounded recovery after resume; no periodic forced writes while idle. */
+#define AUDIOFIX_RESUME_DELAY_US 350000u
+#define AUDIOFIX_RESUME_STEP_US 750000u
+#define AUDIOFIX_RESUME_ATTEMPTS 3
+#define AUDIOFIX_RTC_POLL_US 250000u
+#define AUDIOFIX_RESUME_GAP_US 1500000u
+#define AUDIOFIX_RTC_GAP_SECONDS 2u
 
 #if AUDIOFIX_ROUTE_MODE != 1 && AUDIOFIX_ROUTE_MODE != 2
 #error "Use route 1 ou 2"
@@ -25,5 +34,8 @@
 #endif
 #if AUDIOFIX_MAX_VOLUME < 1 || AUDIOFIX_MAX_VOLUME > 30
 #error "Volume maximo deve estar entre 1 e 30"
+#endif
+#if AUDIOFIX_RESUME_ATTEMPTS < 1 || AUDIOFIX_RESUME_ATTEMPTS > 8
+#error "Resume attempts must be between 1 and 8"
 #endif
 #endif

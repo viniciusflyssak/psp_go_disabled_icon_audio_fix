@@ -10,6 +10,8 @@ The plugin restores audio through the built-in speakers and lets you use **VOL+ 
 
 **Tested on:** PSP Go with PRO-C, firmware **6.61**, version **1.2**. Other setups have not been confirmed.
 
+**Test build 1.3:** [download](dist/v1.3/go_audiofix.prx). Adds a volume-level indicator and a proposed fix for sound after Pause Game. Create a new paused session with 1.3 installed; older sessions may retain the previous plugin state. Console testing is still needed.
+
 ### Installation
 
 1. [Download go_audiofix.prx — v1.2](https://github.com/viniciusflyssak/psp_go_disabled_icon_audio_fix/raw/refs/heads/main/dist/go_audiofix.prx).
@@ -44,6 +46,8 @@ Uma solução para PSP Go que fica sem som ou mostra o ícone de volume desabili
 O plugin recupera o áudio dos alto-falantes e permite usar **VOL+ e VOL−** normalmente, tanto no **menu XMB quanto em jogos**. Funciona automaticamente, sem combinações de botões.
 
 **Testado em:** PSP Go com PRO-C, firmware **6.61**, versão **1.2**. Outras configurações ainda não foram confirmadas.
+
+**Versão de teste 1.3:** [baixar](dist/v1.3/go_audiofix.prx). Adiciona o nível do volume na tela e uma possível correção do som após Pause Game. Crie uma nova pausa com a 1.3 instalada; sessões antigas podem manter o estado anterior do plugin. Ainda precisa de teste no console.
 
 ### Instalação
 

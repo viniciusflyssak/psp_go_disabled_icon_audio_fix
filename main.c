@@ -15,10 +15,13 @@
 #include <pspimpose_driver.h>
 #include <pspsysmem_kernel.h>
 #include <pspinit.h>
+#include <pspsysevent.h>
+#include <psprtc.h>
 #include "config.h"
 #include "osd.h"
+#include "logic.h"
 
-PSP_MODULE_INFO("GoAudioFix", PSP_MODULE_KERNEL, 1, 2);
+PSP_MODULE_INFO("GoAudioFix", PSP_MODULE_KERNEL, 1, 3);
 
 extern unsigned int sctrlHENFindFunction(char *module, char *library,
                                        unsigned int nid);
@@ -39,6 +42,35 @@ static int state_saved;
 static int last_log_result = -1;
 static const char *selected_log_path;
 static unsigned int mute_writes, volume_writes, route_writes;
+static volatile int pending_resume_event;
+static int resume_handler_registered;
+
+/* Notification only: never call audio, storage, display or delays inside a
+ * system-event callback. The worker performs recovery after a short delay.
+ * 0x1000F/0x100000 are used by the firmware audio resume path; 0x400 and
+ * 0x400000 cover additional restore notifications seen by PSP plugins. */
+static int resume_event_handler(int id, char *name, void *param, int *result)
+{
+    (void)name;
+    (void)param;
+    (void)result;
+    switch (id) {
+    case 0x400:
+    case 0x1000F:
+    case 0x100000:
+    case 0x400000:
+        pending_resume_event = id;
+        break;
+    }
+    return 0;
+}
+
+static PspSysEventHandler resume_events = {
+    .size = sizeof(PspSysEventHandler),
+    .name = "GoAudioFixResume",
+    .type_mask = 0x00FFFF00,
+    .handler = resume_event_handler
+};
 
 /* Log apenas na inicializacao, falha e parada. Sem stdio/newlib ou escrita
  * por frame. Os resultados das APIs sao hexadecimais de 32 bits. */
@@ -159,6 +191,26 @@ static int enforce_audio(void)
     return first_error;
 }
 
+/* Hibernation can restore cached mode=2 while the physical route is reset.
+ * A brief auto -> speakers transition refreshes routing even in that case.
+ * Only the bounded recovery window uses this; ordinary polling stays quiet. */
+static int recover_audio(void)
+{
+    int result, first_error = 0;
+    ++route_writes;
+    result = set_route(0);
+    if (result < 0)
+        first_error = result;
+    ++route_writes;
+    result = set_route(AUDIOFIX_ROUTE_MODE);
+    if (result < 0 && !first_error)
+        first_error = result;
+    result = enforce_audio();
+    if (result < 0 && !first_error)
+        first_error = result;
+    return first_error;
+}
+
 /* VOL+ e VOL- juntos e HOLD nao alteram volume. Nao suprimimos os botoes
  * de volume; o impose tambem pode processa-los. Peek evita bloquear ou
  * consumir o buffer que o jogo pode ler com sceCtrlReadBufferPositive. */
@@ -174,8 +226,7 @@ static int direction(unsigned int buttons)
 
 static int due(unsigned int now, unsigned int deadline)
 {
-    /* Comparacao modular: tolera o wrap do relogio baixo (~71 minutos). */
-    return (int)(now - deadline) >= 0;
+    return audiofix_due(now, deadline);
 }
 
 static int audio_thread(SceSize args, void *argp)
@@ -183,11 +234,21 @@ static int audio_thread(SceSize args, void *argp)
     SceCtrlData pad;
     unsigned int now, deadline, next_enforce, next_repeat = 0, next_log_retry;
     unsigned int summary_at;
+    unsigned int last_loop, next_rtc, rtc_resolution;
+    u64 rtc_tick = 0;
+    AudiofixRecovery recovery = {0, 0};
+    AudiofixClock rtc_clock = {0, 0};
+    int resume_event, interrupt_state, volume_pending = 0;
     int dir, previous_dir = 0, result, error_logged = 0, summary_logged = 0;
     (void)args;
     (void)argp;
 
     log_result("worker iniciado; firmware", (int)sceKernelDevkitVersion());
+    result = sceKernelRegisterSysEventHandler(&resume_events);
+    resume_handler_registered = result >= 0;
+    log_result("resume event handler registration", result);
+    rtc_resolution = sceRtcGetTickResolution();
+    log_result("RTC ticks per second", (int)rtc_resolution);
     log_result("context: 100=VSH 200=GAME", sceKernelApplicationType());
     deadline = sceKernelGetSystemTimeLow() + AUDIOFIX_READY_TIMEOUT_US;
     next_log_retry = sceKernelGetSystemTimeLow() + 1000000u;
@@ -234,9 +295,46 @@ static int audio_thread(SceSize args, void *argp)
     log_result("route getter available", get_route != NULL);
     next_enforce = sceKernelGetSystemTimeLow();
     summary_at = next_enforce + 10000000u;
+    last_loop = next_enforce;
+    next_rtc = next_enforce;
 
     while (running) {
         now = sceKernelGetSystemTimeLow();
+        interrupt_state = sceKernelCpuSuspendIntr();
+        resume_event = pending_resume_event;
+        pending_resume_event = 0;
+        sceKernelCpuResumeIntr(interrupt_state);
+        /* RTC survives a saved Pause Game session even when the system clock
+         * and the plugin's RAM are restored to their earlier values. */
+        if (now - last_loop > AUDIOFIX_RESUME_GAP_US) {
+            if (!resume_event)
+                resume_event = 1; /* Worker execution gap. */
+            next_rtc = now;
+        }
+        last_loop = now;
+        if (due(now, next_rtc)) {
+            result = sceRtcGetCurrentTick(&rtc_tick);
+            if (audiofix_clock_gap(&rtc_clock, result >= 0 && rtc_resolution != 0,
+                    rtc_tick, (u64)rtc_resolution * AUDIOFIX_RTC_GAP_SECONDS) &&
+                !resume_event)
+                resume_event = 2; /* RTC discontinuity / restored snapshot. */
+            next_rtc = now + AUDIOFIX_RTC_POLL_US;
+        }
+        if (resume_event && audiofix_recovery_request(&recovery, now)) {
+            log_result("resume recovery requested; trigger", resume_event);
+            previous_dir = 0;
+            next_repeat = now;
+            next_enforce = now;
+            summary_logged = 0;
+            summary_at = now + 10000000u;
+        }
+        if (audiofix_recovery_take(&recovery, now)) {
+            result = recover_audio();
+            log_result("resume recovery attempt", result);
+            if (result < 0)
+                audiofix_osd_show("RESUME AUDIO ERROR", result);
+            next_enforce = now + AUDIOFIX_ENFORCE_US;
+        }
         dir = 0;
         if (sceCtrlPeekBufferPositive(&pad, 1) > 0)
             dir = direction(pad.Buttons);
@@ -249,6 +347,7 @@ static int audio_thread(SceSize args, void *argp)
             next_repeat = now + (dir != previous_dir ?
                          AUDIOFIX_FIRST_REPEAT_US : AUDIOFIX_NEXT_REPEAT_US);
             next_enforce = now;
+            volume_pending = 1;
         }
         previous_dir = dir;
         if (due(now, next_enforce)) {
@@ -267,6 +366,13 @@ static int audio_thread(SceSize args, void *argp)
                 log_result("apply: primeira falha posterior", result);
                 audiofix_osd_show("ERROR AUDIO API", result);
                 error_logged = 1;
+            }
+            if (volume_pending) {
+                if (result >= 0)
+                    audiofix_osd_volume(target_volume);
+                else
+                    audiofix_osd_show("AUDIO API ERROR", result);
+                volume_pending = 0;
             }
             next_enforce = now + AUDIOFIX_ENFORCE_US;
         }
@@ -311,7 +417,7 @@ int module_start(SceSize args, void *argp)
     int result;
     (void)args;
     (void)argp;
-    log_result("GoAudioFix 1.2 module_start", 0);
+    log_result("GoAudioFix 1.3 module_start", 0);
     log_result("model", sceKernelGetModel());
     /* 05g/PSP Go = 4 na API. ef0: e armazenamento, nao particao RAM. */
     if (sceKernelGetModel() != 4) {
@@ -352,6 +458,12 @@ int module_stop(SceSize args, void *argp)
         if (result < 0)
             return result;
         worker_id = -1;
+    }
+    if (resume_handler_registered) {
+        result = sceKernelUnregisterSysEventHandler(&resume_events);
+        if (result < 0)
+            return result; /* Keep callback code resident if still busy. */
+        resume_handler_registered = 0;
     }
     if (state_saved) {
         set_param(PSP_IMPOSE_MAIN_VOLUME, old_volume);

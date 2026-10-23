@@ -5,6 +5,7 @@
 #include <pspdisplay.h>
 #include "config.h"
 #include "osd.h"
+#include "logic.h"
 
 /* Original 5x7 glyph table, columns, low bit at top; uppercase only. */
 static const unsigned char letters[26][5] = {
@@ -33,6 +34,7 @@ static const unsigned char digits[10][5] = {
 static char status[39];
 static int status_result;
 static unsigned int first_draw;
+static unsigned int duration = AUDIOFIX_OSD_US;
 static int active, drawn;
 
 void audiofix_osd_show(const char *message, int result)
@@ -46,6 +48,15 @@ void audiofix_osd_show(const char *message, int result)
     status_result = result;
     drawn = 0;
     active = 1;
+    duration = AUDIOFIX_OSD_US;
+}
+
+void audiofix_osd_volume(int level)
+{
+    char text[13];
+    audiofix_volume_text(text, level, AUDIOFIX_MAX_VOLUME);
+    audiofix_osd_show(text, 0);
+    duration = AUDIOFIX_VOLUME_OSD_US;
 }
 
 static unsigned int column(char ch, int x)
@@ -60,6 +71,8 @@ static unsigned int column(char ch, int x)
         return x == 2 ? 0x40 : 0;
     if (ch == '-')
         return 0x08;
+    if (ch == '/')
+        return 1u << (6 - x);
     return 0;
 }
 
@@ -113,7 +126,7 @@ int audiofix_osd_tick(int log_result)
     if (!AUDIOFIX_OSD_ENABLED || !active)
         return 0;
     now = sceKernelGetSystemTimeLow();
-    if (drawn && now - first_draw >= AUDIOFIX_OSD_US) {
+    if (drawn && now - first_draw >= duration) {
         active = 0;
         return 0;
     }
@@ -134,7 +147,7 @@ int audiofix_osd_tick(int log_result)
         return 1;
     /* Uncached alias of validated VRAM; application buffers are not owned. */
     buffer = (void *)(address | 0x40000000u);
-    length = append(popup, 0, "AUDIOFIX 1.2 ");
+    length = append(popup, 0, "AUDIOFIX 1.3 ");
     length = append(popup, length, status);
     if (status_result < 0) {
         hex8(code, (unsigned int)status_result);

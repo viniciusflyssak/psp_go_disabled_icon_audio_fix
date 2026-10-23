@@ -4,6 +4,37 @@
 
 ## English
 
+### 1.3 resume recovery and volume indicator
+
+This is a candidate fix; the Pause Game path is not yet validated on the console.
+The module registers a system-event handler that only sets a flag. Audio calls,
+logging and OSD work stay in the worker. A separate RTC check every 250 ms can
+spot a restored snapshot whose plugin/system-time state was saved earlier.
+Long worker gaps also request recovery. RTC adjustments or long scheduling
+stalls can trigger the same limited recovery sequence.
+
+Each request schedules up to three auto -> speaker routing refreshes, starting
+after 350 ms and spaced 750 ms apart. Related requests share the active window;
+there is no catch-up burst after a missed deadline. A fresh route transition
+can refresh physical output even if the cached route getter still returns 2.
+The log records the trigger (event ID, 1 for worker gap, 2 for RTC gap) and each
+attempt result. A successful API result is not proof of audible sound.
+
+`logic.c` / `logic.h` contain the platform-independent timing/formatting logic.
+Host tests can be run with a native C compiler from the project root:
+
+```sh
+cc -std=c99 -Wall -Wextra -Werror -I. logic.c tests/logic_test.c -o /tmp/audiofix_logic_test
+/tmp/audiofix_logic_test
+```
+
+`AUDIOFIX_VOLUME_OSD_US` controls the volume indicator lifetime (1.5 seconds).
+It displays the target level after accepted audio calls, including at 0/30.
+The source and newly compiled root PRX are version 1.3. The tested 1.2 artifact
+remains at `dist/go_audiofix.prx`; the candidate is `dist/v1.3/go_audiofix.prx`.
+Create a fresh Pause Game snapshot after updating; an older snapshot may restore
+an older plugin/state and cannot be assumed to include the new code.
+
 ### Status and behavior
 
 Version **1.2 was tested successfully on a PSP Go running firmware 6.61**, as reported by the console owner: speaker audio and VOL+/VOL- work in XMB and games; the smaller notification displays correctly; the native volume icon no longer remains visible at startup. It also builds with PSPDEV using `-Wall -Wextra -Werror`. This confirms operation on the tested device, not every firmware, game or hardware revision.
@@ -80,6 +111,32 @@ Routing **mode 2** (force speakers) is based on reports for recent firmware and 
 Check the new notification/log, whether the native volume icon stops constantly reappearing, actual speaker audio, volume bounds and hold-repeat; test XMB, homebrew, a game, suspend/resume and return to XMB. Check for freezes, cuts and duplicate volume steps. Volume returns to 12 when a new plugin instance loads. An accepted API result does not validate the speaker output.
 
 ## Português
+
+### Recuperação de retomada e indicador de volume da 1.3
+
+É uma possível correção; o caminho Pause Game ainda precisa ser validado no PSP.
+O handler de eventos do sistema apenas sinaliza a thread. Áudio, log e tela são
+tratados fora do callback. Uma leitura RTC a cada 250 ms ajuda a detectar uma
+sessão restaurada com estado antigo do plugin/relógio do sistema. Intervalos
+longos sem executar a thread também solicitam recuperação. Ajustes do RTC ou
+atrasos longos de agendamento podem acionar a mesma sequência limitada.
+
+Cada solicitação agenda até três atualizações automático -> alto-falantes,
+começando após 350 ms e espaçadas em 750 ms. Eventos relacionados compartilham
+a janela ativa, sem rajada para compensar prazos perdidos. A troca de rota pode
+atualizar a saída física mesmo quando o getter ainda informa 2. O log registra
+a origem (ID do evento, 1 para salto na thread, 2 para salto RTC) e o retorno de
+cada tentativa. Sucesso da API não comprova som audível.
+
+`logic.c` / `logic.h` contêm a lógica de tempo e formatação. Com um compilador C
+nativo, execute os comandos de teste da seção inglesa na raiz do projeto.
+`AUDIOFIX_VOLUME_OSD_US` controla a duração do indicador (1,5 segundo). Ele mostra
+o nível desejado após as APIs aceitarem o ajuste, inclusive em 0/30.
+
+Os fontes e o PRX recompilado na raiz são a versão 1.3. O binário 1.2 validado
+continua em `dist/go_audiofix.prx`; a candidata está em `dist/v1.3/go_audiofix.prx`.
+Crie uma nova pausa após atualizar; uma sessão antiga pode restaurar o código
+ou estado anterior, sem incluir a mudança.
 
 ### Estado e funcionamento
 

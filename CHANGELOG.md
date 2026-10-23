@@ -2,6 +2,21 @@
 
 ## English
 
+### 1.3 — test build, pending console validation
+
+- Show `VOLUME 00/30` through `VOLUME 30/30` after VOL+/VOL- adjustments;
+  hide the notification about 1.5 seconds after the last adjustment.
+- Detect resume notifications and gaps in the worker/RTC timeline, including
+  a restored Pause Game session when cached audio settings still look correct.
+- Refresh routing through auto -> speakers at most three times per recovery
+  window, with a delay and spaced attempts. Normal polling stays conditional.
+- Keep audio/display/file operations outside system-event callbacks, and
+  unregister the handler before unloading the module.
+- Add host tests for bounded/coalesced retries, timer wrap, restored clocks
+  and volume labels. These do not substitute for a PSP hardware test.
+- Keep the hardware-validated 1.2 binary in `dist/`; publish the 1.3 candidate
+  separately in `dist/v1.3/`.
+
 ### 1.2 — user-confirmed on PSP Go, firmware 6.61
 
 - Confirmed on the user's console: XMB and game audio, volume buttons, correct
@@ -23,6 +38,21 @@
 - Reported issues: large/flickering overlay and continually visible volume icon.
 
 ## Português
+
+### 1.3 — versão de teste, aguardando validação no console
+
+- Exibe de `VOLUME 00/30` a `VOLUME 30/30` após ajustar VOL+/VOL-;
+  oculta o aviso cerca de 1,5 segundo depois do último ajuste.
+- Detecta notificações de retomada e saltos no tempo da thread/RTC, incluindo
+  retorno de Pause Game quando os valores de áudio em memória parecem corretos.
+- Atualiza a rota por automático -> alto-falantes em até três tentativas
+  espaçadas por recuperação. A verificação normal continua sem escritas inúteis.
+- Mantém áudio, tela e arquivos fora do callback de eventos e remove o handler
+  antes de descarregar o módulo.
+- Adiciona testes de tentativas limitadas, eventos agrupados, virada do relógio,
+  restauração de tempo e texto de volume. Não substituem o teste no PSP.
+- Preserva o binário 1.2 validado em `dist/` e publica a candidata 1.3
+  separadamente em `dist/v1.3/`.
 
 ### 1.2 — confirmada pelo usuário em PSP Go, firmware 6.61
 
