@@ -2,6 +2,12 @@
 
 ## English
 
+### 1.4 — Bluetooth test build
+
+- On Go firmware 6.61, read the native Bluetooth audio selection before choosing automatic routing or forced speakers, including at startup and after Pause Game.
+- Preserve the last selection if a status read fails. Keep the existing behavior on firmware versions that have not been examined.
+- Build and host tests passed; Bluetooth behavior still needs hardware validation. The main download remains 1.3, whose Bluetooth limitation is now documented.
+
 ### 1.3 — user-confirmed on PSP Go, PRO-C 6.61
 
 - The console owner confirmed the requested behavior, including Pause Game
@@ -41,6 +47,12 @@
 - Reported issues: large/flickering overlay and continually visible volume icon.
 
 ## Português
+
+### 1.4 — versão de teste para Bluetooth
+
+- No Go com firmware 6.61, consulta a seleção de áudio Bluetooth antes de escolher o roteamento automático ou forçar os alto-falantes, inclusive ao iniciar e retomar o Pause Game.
+- Preserva a última seleção se a consulta falhar. Mantém o comportamento anterior nos firmwares que ainda não foram analisados.
+- Compilação e testes de lógica passaram; o Bluetooth ainda precisa de validação no console. O download principal continua na versão 1.3, agora com a limitação Bluetooth documentada.
 
 ### 1.3 — confirmada pelo usuário em PSP Go, PRO-C 6.61
 

@@ -13,6 +13,7 @@ typedef struct {
 } AudiofixClock;
 
 int audiofix_due(unsigned int now, unsigned int deadline);
+int audiofix_bluetooth_state(int status, int previous);
 int audiofix_recovery_request(AudiofixRecovery *state, unsigned int now);
 int audiofix_recovery_take(AudiofixRecovery *state, unsigned int now);
 int audiofix_clock_gap(AudiofixClock *clock, int read_ok,

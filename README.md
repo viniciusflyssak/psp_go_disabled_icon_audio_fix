@@ -12,6 +12,8 @@ The plugin restores audio through the built-in speakers and lets you use **VOL+ 
 
 It also restores sound after **Pause Game** and shows the current level, such as **VOLUME 12/30**, when you adjust it.
 
+**Bluetooth:** version 1.3 keeps audio on the speakers. [Try version 1.4](dist/v1.4/README.md) for Bluetooth switching on firmware 6.61; console testing is pending.
+
 ### Installation
 
 1. [Download go_audiofix.prx — v1.3](https://github.com/viniciusflyssak/psp_go_disabled_icon_audio_fix/raw/refs/heads/main/dist/go_audiofix.prx).
@@ -48,6 +50,8 @@ O plugin recupera o áudio dos alto-falantes e permite usar **VOL+ e VOL−** no
 **Testado em:** PSP Go com PRO-C, firmware **6.61**, versão **1.3**. Outras configurações ainda não foram confirmadas.
 
 Também recupera o som após **Pause Game** e mostra o nível atual, como **VOLUME 12/30**, ao ajustar o volume.
+
+**Bluetooth:** a versão 1.3 mantém o som nos alto-falantes. [Teste a versão 1.4](dist/v1.4/README.md) para alternar a saída Bluetooth no firmware 6.61; falta validar no console.
 
 ### Instalação
 

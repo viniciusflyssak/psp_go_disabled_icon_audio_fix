@@ -5,4 +5,5 @@ exports.c
 *.log
 !dist/go_audiofix.prx
 !dist/v1.3/go_audiofix.prx
+!dist/v1.4/go_audiofix.prx
 !dist/v1.2/go_audiofix.prx

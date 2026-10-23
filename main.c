@@ -21,7 +21,7 @@
 #include "osd.h"
 #include "logic.h"
 
-PSP_MODULE_INFO("GoAudioFix", PSP_MODULE_KERNEL, 1, 3);
+PSP_MODULE_INFO("GoAudioFix", PSP_MODULE_KERNEL, 1, 4);
 
 extern unsigned int sctrlHENFindFunction(char *module, char *library,
                                        unsigned int nid);
@@ -44,6 +44,9 @@ static const char *selected_log_path;
 static unsigned int mute_writes, volume_writes, route_writes;
 static volatile int pending_resume_event;
 static int resume_handler_registered;
+static int bluetooth_route;
+static int bluetooth_query_enabled;
+static int bluetooth_query_logged;
 
 /* Notification only: never call audio, storage, display or delays inside a
  * system-event callback. The worker performs recovery after a short delay.
@@ -162,9 +165,29 @@ static int resolve_audio(void)
  * volume popup. Polling must not generate UI events while state is stable.
  * A route getter is optional: without it, keep the startup route rather than
  * repeatedly writing an unverifiable value. */
+/* Read-only impose parameter observed in the Go 6.61 audio path. It returns
+ * the same 0/1 flag that native routing and Bluetooth volume handling use,
+ * not radio power or the connection state of a controller. Restrict the
+ * undocumented parameter to the firmware examined; never read module RAM.
+ * A failed read preserves the last policy instead of switching outputs. */
+static int desired_route(void)
+{
+    int status;
+    if (bluetooth_query_enabled) {
+        status = get_param(0x1000);
+        if (!bluetooth_query_logged || status != bluetooth_route) {
+            if (!bluetooth_query_logged || status == 0 || status == 1)
+                log_result("Bluetooth audio status: 0=local 1=Bluetooth", status);
+            bluetooth_query_logged = 1;
+        }
+        bluetooth_route = audiofix_bluetooth_state(status, bluetooth_route);
+    }
+    return bluetooth_route ? 0 : AUDIOFIX_ROUTE_MODE;
+}
+
 static int enforce_audio(void)
 {
-    int result, first_error = 0;
+    int result, first_error = 0, route = desired_route();
     result = get_param(PSP_IMPOSE_MUTE);
     if (result > 0) {
         ++mute_writes;
@@ -181,9 +204,9 @@ static int enforce_audio(void)
         first_error = result;
     if (get_route) {
         result = get_route();
-        if (result >= 0 && result != AUDIOFIX_ROUTE_MODE) {
+        if (result >= 0 && result != route) {
             ++route_writes;
-            result = set_route(AUDIOFIX_ROUTE_MODE);
+            result = set_route(route);
         }
         if (result < 0 && !first_error)
             first_error = result;
@@ -197,6 +220,10 @@ static int enforce_audio(void)
 static int recover_audio(void)
 {
     int result, first_error = 0;
+    /* Bluetooth owns routing during resume too. Never pulse speakers while
+     * the native audio path is using the wireless device. */
+    if (desired_route() == 0)
+        return enforce_audio();
     ++route_writes;
     result = set_route(0);
     if (result < 0)
@@ -284,7 +311,9 @@ static int audio_thread(SceSize args, void *argp)
         return 0;
 
     /* SetMode retorna o modo ANTERIOR, nao necessariamente zero. */
-    old_route = set_route(AUDIOFIX_ROUTE_MODE);
+    bluetooth_query_enabled = sceKernelDevkitVersion() == 0x06060110;
+    log_result("Bluetooth audio query supported", bluetooth_query_enabled);
+    old_route = set_route(desired_route());
     log_result("set_route: modo anterior ou erro", old_route);
     if (old_route < 0) {
         audiofix_osd_show("ERROR ROUTING REJECTED", old_route);
@@ -417,7 +446,7 @@ int module_start(SceSize args, void *argp)
     int result;
     (void)args;
     (void)argp;
-    log_result("GoAudioFix 1.3 module_start", 0);
+    log_result("GoAudioFix 1.4 module_start", 0);
     log_result("model", sceKernelGetModel());
     /* 05g/PSP Go = 4 na API. ef0: e armazenamento, nao particao RAM. */
     if (sceKernelGetModel() != 4) {

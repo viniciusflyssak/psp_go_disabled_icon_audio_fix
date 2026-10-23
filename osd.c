@@ -147,7 +147,7 @@ int audiofix_osd_tick(int log_result)
         return 1;
     /* Uncached alias of validated VRAM; application buffers are not owned. */
     buffer = (void *)(address | 0x40000000u);
-    length = append(popup, 0, "AUDIOFIX 1.3 ");
+    length = append(popup, 0, "AUDIOFIX 1.4 ");
     length = append(popup, length, status);
     if (status_result < 0) {
         hex8(code, (unsigned int)status_result);

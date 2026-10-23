@@ -1,6 +1,13 @@
 #include "config.h"
 #include "logic.h"
 
+/* Only native 0/1 values are valid. Unsupported/error reads must not cause
+ * an active wireless route to suddenly return to the internal speakers. */
+int audiofix_bluetooth_state(int status, int previous)
+{
+    return status == 0 || status == 1 ? status : previous;
+}
+
 int audiofix_due(unsigned int now, unsigned int deadline)
 {
     return (int)(now - deadline) >= 0;

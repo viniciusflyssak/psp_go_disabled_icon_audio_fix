@@ -4,6 +4,16 @@
 
 ## English
 
+### 1.4 Bluetooth candidate
+
+Source/root build: 1.4. Main download: hardware-tested 1.3 (Bluetooth switching is a known issue). The 1.4 candidate is in `dist/v1.4/`.
+
+Local analysis of the official PSP Go 6.61 firmware identified read-only impose parameter `0x1000`: it returns the same Boolean selection used by native Bluetooth routing and volume handling. This interpretation still needs confirmation on hardware. The plugin queries it through the existing resolved impose API, with no module-memory reads, patches, extra Bluetooth imports or pairing changes. Only firmware `0x06060110` enables this undocumented query; other versions retain the previous speaker workaround and log that the query is unsupported.
+
+Status 1 selects automatic route 0; status 0 selects configured speaker route 2. Errors or unexpected values preserve the last selection (initially local). Selection is checked at startup, each audio enforcement and each resume attempt. Resume never forces a speaker transition when the selection is Bluetooth. Native master-volume handling and the volume overlay are unchanged. State transitions are logged, without per-frame storage writes.
+
+Hardware checks: connect/disconnect audio in XMB and a fresh game; start with a headset already connected; resume a newly created Pause Game session with and without Bluetooth; keep only the radio or a controller connected. Verify audio, volume buttons and overlay, and that speakers return on headset disconnection. SDK compilation and host state/timing tests cannot establish audible output.
+
 ### 1.3 resume recovery and volume indicator
 
 The console owner confirmed version 1.3, including Pause Game recovery and the volume indicator, on PSP Go with PRO-C firmware 6.61. Other setups remain unvalidated.
@@ -30,7 +40,7 @@ cc -std=c99 -Wall -Wextra -Werror -I. logic.c tests/logic_test.c -o /tmp/audiofi
 
 `AUDIOFIX_VOLUME_OSD_US` controls the volume indicator lifetime (1.5 seconds).
 It displays the target level after accepted audio calls, including at 0/30.
-The source and newly compiled root PRX are version 1.3. The main download at `dist/go_audiofix.prx` and versioned copy at
+The archived 1.3 source behavior described below predates the 1.4 Bluetooth candidate. The main download at `dist/go_audiofix.prx` and versioned copy at
 `dist/v1.3/go_audiofix.prx` are the tested 1.3 binary; 1.2 is archived in `dist/v1.2/`.
 Create a fresh Pause Game snapshot after updating; an older snapshot may restore
 an older plugin/state and cannot be assumed to include the new code.
@@ -111,6 +121,14 @@ Routing **mode 2** (force speakers) is based on reports for recent firmware and 
 Check the new notification/log, whether the native volume icon stops constantly reappearing, actual speaker audio, volume bounds and hold-repeat; test XMB, homebrew, a game, suspend/resume and return to XMB. Check for freezes, cuts and duplicate volume steps. Volume returns to 12 when a new plugin instance loads. An accepted API result does not validate the speaker output.
 
 ## Português
+
+### Versão 1.4 para teste de Bluetooth
+
+O código e o PRX da raiz estão na versão 1.4; o download principal continua na 1.3, com limitação conhecida na troca para Bluetooth. O novo arquivo fica em `dist/v1.4/`.
+
+A consulta de áudio Bluetooth é habilitada apenas no firmware 6.61 analisado. A interpretação do parâmetro ainda precisa de confirmação no console. Ela permite liberar o roteamento automático quando o sistema seleciona Bluetooth e voltar aos alto-falantes ao desconectar. Também é consultada na inicialização e na recuperação do Pause Game. Não altera o pareamento nem lê diretamente a memória dos módulos. Erros de consulta preservam a última seleção; outros firmwares mantêm o comportamento anterior.
+
+Teste conexão e desconexão no XMB e em jogos, inicialização com fone conectado, uma nova sessão de Pause Game e Bluetooth ligado sem fone. Confira som, botões e indicador de volume. A compilação e os testes de lógica não substituem essa verificação.
 
 ### Recuperação de retomada e indicador de volume da 1.3
 

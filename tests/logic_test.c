@@ -76,9 +76,21 @@ static void test_volume_labels(void)
 
 int main(void)
 {
+    /* A complete connect/read-failure/disconnect sequence, including a
+     * plugin starting with Bluetooth already active. Reject non-booleans. */
+    int wireless = 0;
+    assert(audiofix_bluetooth_state(-1, wireless) == 0);
+    wireless = audiofix_bluetooth_state(1, wireless);
+    assert(wireless == 1);
+    assert(audiofix_bluetooth_state(-1, wireless) == 1);
+    assert(audiofix_bluetooth_state(2, wireless) == 1);
+    assert(audiofix_bluetooth_state(0x1000, wireless) == 1);
+    wireless = audiofix_bluetooth_state(0, wireless);
+    assert(wireless == 0);
+    assert(audiofix_bluetooth_state(1, 0) == 1);
     test_recovery_window();
     test_snapshot_clock();
     test_volume_labels();
-    puts("PASS: bounded recovery, timer wrap, snapshot clock, volume labels");
+    puts("PASS: Bluetooth state transitions, bounded recovery, timer wrap, snapshot clock, volume labels");
     return 0;
 }
