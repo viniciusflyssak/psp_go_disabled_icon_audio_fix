@@ -4,11 +4,11 @@
 
 ## English
 
-### 1.4 Bluetooth candidate
+### 1.4 Bluetooth support
 
-Source/root build: 1.4. Main download: hardware-tested 1.3 (Bluetooth switching is a known issue). The 1.4 candidate is in `dist/v1.4/`.
+The console owner confirmed the Bluetooth fix on PSP Go, PRO-C 6.61. Source/root build and main download are version 1.4; the unchanged tested binary is also archived in `dist/v1.4/`. Other setups remain unvalidated.
 
-Local analysis of the official PSP Go 6.61 firmware identified read-only impose parameter `0x1000`: it returns the same Boolean selection used by native Bluetooth routing and volume handling. This interpretation still needs confirmation on hardware. The plugin queries it through the existing resolved impose API, with no module-memory reads, patches, extra Bluetooth imports or pairing changes. Only firmware `0x06060110` enables this undocumented query; other versions retain the previous speaker workaround and log that the query is unsupported.
+Local analysis of the official PSP Go 6.61 firmware identified read-only impose parameter `0x1000`: it returns the same Boolean selection used by native Bluetooth routing and volume handling. The console owner subsequently confirmed that the Bluetooth fix works on the tested device. The plugin queries it through the existing resolved impose API, with no module-memory reads, patches, extra Bluetooth imports or pairing changes. Only firmware `0x06060110` enables this undocumented query; other versions retain the previous speaker workaround and log that the query is unsupported.
 
 Status 1 selects automatic route 0; status 0 selects configured speaker route 2. Errors or unexpected values preserve the last selection (initially local). Selection is checked at startup, each audio enforcement and each resume attempt. Resume never forces a speaker transition when the selection is Bluetooth. Native master-volume handling and the volume overlay are unchanged. State transitions are logged, without per-frame storage writes.
 
@@ -40,8 +40,7 @@ cc -std=c99 -Wall -Wextra -Werror -I. logic.c tests/logic_test.c -o /tmp/audiofi
 
 `AUDIOFIX_VOLUME_OSD_US` controls the volume indicator lifetime (1.5 seconds).
 It displays the target level after accepted audio calls, including at 0/30.
-The archived 1.3 source behavior described below predates the 1.4 Bluetooth candidate. The main download at `dist/go_audiofix.prx` and versioned copy at
-`dist/v1.3/go_audiofix.prx` are the tested 1.3 binary; 1.2 is archived in `dist/v1.2/`.
+The recovery behavior introduced in 1.3 is retained in 1.4, with the Bluetooth exception above. Earlier binaries remain archived in `dist/v1.3/` and `dist/v1.2/`.
 Create a fresh Pause Game snapshot after updating; an older snapshot may restore
 an older plugin/state and cannot be assumed to include the new code.
 
@@ -122,11 +121,11 @@ Check the new notification/log, whether the native volume icon stops constantly 
 
 ## Português
 
-### Versão 1.4 para teste de Bluetooth
+### Suporte Bluetooth na versão 1.4
 
-O código e o PRX da raiz estão na versão 1.4; o download principal continua na 1.3, com limitação conhecida na troca para Bluetooth. O novo arquivo fica em `dist/v1.4/`.
+O proprietário confirmou a correção do Bluetooth em PSP Go com PRO-C 6.61. O código, o PRX da raiz e o download principal estão na versão 1.4. O mesmo binário testado está em `dist/v1.4/`. Outras configurações ainda não foram validadas.
 
-A consulta de áudio Bluetooth é habilitada apenas no firmware 6.61 analisado. A interpretação do parâmetro ainda precisa de confirmação no console. Ela permite liberar o roteamento automático quando o sistema seleciona Bluetooth e voltar aos alto-falantes ao desconectar. Também é consultada na inicialização e na recuperação do Pause Game. Não altera o pareamento nem lê diretamente a memória dos módulos. Erros de consulta preservam a última seleção; outros firmwares mantêm o comportamento anterior.
+A consulta de áudio Bluetooth é habilitada apenas no firmware 6.61 analisado. O proprietário confirmou o funcionamento da correção no aparelho testado. Ela permite liberar o roteamento automático quando o sistema seleciona Bluetooth e voltar aos alto-falantes ao desconectar. Também é consultada na inicialização e na recuperação do Pause Game. Não altera o pareamento nem lê diretamente a memória dos módulos. Erros de consulta preservam a última seleção; outros firmwares mantêm o comportamento anterior.
 
 Teste conexão e desconexão no XMB e em jogos, inicialização com fone conectado, uma nova sessão de Pause Game e Bluetooth ligado sem fone. Confira som, botões e indicador de volume. A compilação e os testes de lógica não substituem essa verificação.
 
@@ -151,8 +150,7 @@ nativo, execute os comandos de teste da seção inglesa na raiz do projeto.
 `AUDIOFIX_VOLUME_OSD_US` controla a duração do indicador (1,5 segundo). Ele mostra
 o nível desejado após as APIs aceitarem o ajuste, inclusive em 0/30.
 
-Os fontes e o PRX recompilado na raiz são a versão 1.3. O download principal em `dist/go_audiofix.prx` e a cópia em `dist/v1.3/go_audiofix.prx`
-são o binário 1.3 testado; a versão 1.2 está arquivada em `dist/v1.2/`.
+A recuperação introduzida na versão 1.3 continua na 1.4, respeitando a saída Bluetooth conforme explicado acima. As versões anteriores estão arquivadas em `dist/v1.3/` e `dist/v1.2/`.
 Crie uma nova pausa após atualizar; uma sessão antiga pode restaurar o código
 ou estado anterior, sem incluir a mudança.
 
