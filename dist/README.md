@@ -1,13 +1,15 @@
-﻿# GoAudioFix 1.2 — test build
+# GoAudioFix 1.2
 
 ## English
 
 Download `go_audiofix.prx` from this folder and copy it to `ef0:/seplugins/`.
 See the main README for installation and rollback instructions.
 
-Version 1.2 compiled successfully with PSPDEV. Its popup and polling changes
-still await hardware validation. Version 1.1 was reported working in XMB and
-a freshly launched game on one PSP Go running firmware 6.61.
+Version 1.2 compiled successfully with PSPDEV and was confirmed working by the
+owner of a PSP Go running firmware 6.61: speaker audio and volume buttons in
+XMB and games, correct small notification, and no persistent startup volume
+icon. This is validation on one device, not a universal compatibility claim.
+The binary is unchanged from the version 1.2 test build.
 
 SHA-256:
 
@@ -20,8 +22,10 @@ SHA-256:
 Baixe `go_audiofix.prx` desta pasta e copie para `ef0:/seplugins/`.
 Consulte o README principal para instalar ou desfazer a instalação.
 
-A versão 1.2 compilou no PSPDEV. As alterações de aviso e verificação de estado
-ainda aguardam validação no console. A versão 1.1 funcionou no XMB e em jogo
-iniciado novamente em um PSP Go com firmware 6.61, conforme relato do usuário.
+A versão 1.2 compilou no PSPDEV e foi confirmada pelo proprietário de um PSP Go
+com firmware 6.61: áudio e botões de volume no XMB e em jogos, aviso pequeno
+correto e ausência do ícone de volume persistente no início. É validação em
+um aparelho, não uma garantia universal de compatibilidade.
+O binário é o mesmo da versão 1.2 de teste, sem alterações.
 
-O SHA-256 acima identifica este binário de teste.
+O SHA-256 acima identifica este binário.

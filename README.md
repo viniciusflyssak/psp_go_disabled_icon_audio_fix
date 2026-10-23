@@ -6,13 +6,13 @@ Plugin kernel experimental para PSP Go com PRO-C que tenta recuperar o áudio do
 
 Repository: https://github.com/viniciusflyssak/psp_go_disabled_icon_audio_fix
 
-Test build / Binário de teste: [go_audiofix.prx 1.2](dist/go_audiofix.prx) — [notes / notas](dist/README.md).
+Compiled build / Binário compilado: [go_audiofix.prx 1.2](dist/go_audiofix.prx) — [notes / notas](dist/README.md).
 
 ## English
 
 ### Status and behavior
 
-Version **1.2** builds successfully with PSPDEV using `-Wall -Wextra -Werror`; its UI changes await hardware testing. The user confirmed **version 1.1 speaker audio and volume-button control in XMB and a freshly launched game on PSP Go, firmware 6.61**. The initial game failure was reported while continuing an existing session. This is a single-device report, not a compatibility guarantee.
+Version **1.2 was tested successfully on a PSP Go running firmware 6.61**, as reported by the console owner: speaker audio and VOL+/VOL- work in XMB and games; the smaller notification displays correctly; the native volume icon no longer remains visible at startup. It also builds with PSPDEV using `-Wall -Wextra -Werror`. This confirms operation on the tested device, not every firmware, game or hardware revision.
 
 - PSP Go only (05g, model value 4), in VSH and GAME.
 - Requests speaker routing, clears system mute, and sets master volume.
@@ -89,7 +89,7 @@ Check the new notification/log, whether the native volume icon stops constantly 
 
 ### Estado e funcionamento
 
-A versão **1.2** compila no PSPDEV com `-Wall -Wextra -Werror`; os novos ajustes visuais aguardam teste no console. O usuário confirmou **áudio nos alto-falantes e botões de volume na versão 1.1, no XMB e em jogo iniciado novamente, em PSP Go com firmware 6.61**. A falha inicial em jogo ocorreu ao continuar uma sessão existente. É um relato de um aparelho, não uma garantia geral de compatibilidade.
+A versão **1.2 foi testada com sucesso em um PSP Go com firmware 6.61**, conforme relato do proprietário: áudio nos alto-falantes e VOL+/VOL- funcionam no XMB e em jogos; o aviso menor aparece corretamente; o ícone nativo de volume não fica mais visível no início. A versão também compila no PSPDEV com `-Wall -Wextra -Werror`. O resultado confirma o funcionamento no aparelho testado, sem representar todos os firmwares, jogos ou revisões de hardware.
 
 - Somente PSP Go (05g, modelo 4), nos contextos VSH e GAME.
 - Solicita a rota dos alto-falantes, limpa mute e ajusta o volume mestre.

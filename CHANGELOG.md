@@ -2,7 +2,10 @@
 
 ## English
 
-### 1.2 — pending hardware validation
+### 1.2 — user-confirmed on PSP Go, firmware 6.61
+
+- Confirmed on the user's console: XMB and game audio, volume buttons, correct
+  small notification and no persistent startup volume icon.
 
 - Read mute, master volume and route before writing. Stable polling no longer
   repeatedly requests identical settings, addressing a suspected cause of the
@@ -21,7 +24,10 @@
 
 ## Português
 
-### 1.2 — aguardando validação no console
+### 1.2 — confirmada pelo usuário em PSP Go, firmware 6.61
+
+- Confirmado no console do usuário: áudio no XMB e em jogos, botões de volume,
+  aviso pequeno correto e ausência do ícone de volume persistente no início.
 
 - Consulta mute, volume mestre e rota antes de escrever. A verificação de estado
   estável não repete ajustes idênticos, tratando uma possível causa do ícone de
